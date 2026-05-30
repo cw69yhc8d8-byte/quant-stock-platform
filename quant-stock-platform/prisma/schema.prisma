@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Stock {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  name      String
+  market    String
+  sector    String
+  industry  String
+  isST      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  quotes DailyQuote[]
+  scores StockScore[]
+
+  @@index([sector])
+  @@index([industry])
+}
+
+model DailyQuote {
+  id           Int      @id @default(autoincrement())
+  stockCode    String
+  tradeDate    DateTime
+  open         Float
+  high         Float
+  low          Float
+  close        Float
+  volume       Float
+  amount       Float
+  pctChange    Float
+  turnoverRate Float
+  createdAt    DateTime @default(now())
+
+  stock Stock @relation(fields: [stockCode], references: [code], onDelete: Cascade)
+
+  @@unique([stockCode, tradeDate])
+  @@index([tradeDate])
+}
+
+model SectorDailyStat {
+  id           Int      @id @default(autoincrement())
+  sectorName   String
+  tradeDate    DateTime
+  pctChange    Float
+  amount       Float
+  limitUpCount Int
+  hotScore     Int
+  leadingStock String
+  riskLevel    String
+  focusLevel   String
+  createdAt    DateTime @default(now())
+
+  @@unique([sectorName, tradeDate])
+  @@index([tradeDate])
+}
+
+model StockScore {
+  id          Int      @id @default(autoincrement())
+  stockCode   String
+  tradeDate   DateTime
+  trendScore  Int
+  volumeScore Int
+  sectorScore Int
+  fundScore   Int
+  riskScore   Int
+  totalScore  Int
+  rating      String
+  buyTrigger  String
+  stopLoss    String
+  takeProfit  String
+  riskNote    String
+  reason      String
+  createdAt   DateTime @default(now())
+
+  stock Stock @relation(fields: [stockCode], references: [code], onDelete: Cascade)
+
+  @@unique([stockCode, tradeDate])
+  @@index([tradeDate])
+  @@index([rating])
+}
+
+model DailyReport {
+  id               Int      @id @default(autoincrement())
+  reportDate       DateTime @unique
+  marketSummary    String
+  indexPerformance String
+  hotSectors       String
+  watchlist        String
+  previousReview   String
+  avoidDirections  String
+  riskWarning      String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model TradeJournal {
+  id           Int       @id @default(autoincrement())
+  stockCode    String
+  stockName    String
+  buyDate      DateTime
+  buyPrice     Float
+  sellDate     DateTime?
+  sellPrice    Float?
+  positionSize Float
+  stopLoss     String
+  takeProfit   String
+  buyReason    String
+  sellReason   String?
+  profitLoss   Float?
+  profitLossPct Float?
+  reviewNote   String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([stockCode])
+  @@index([buyDate])
+}
+
+model DataRefreshLog {
+  id           Int       @id @default(autoincrement())
+  provider     String
+  taskType     String
+  status       String
+  startedAt    DateTime
+  finishedAt   DateTime?
+  message      String
+  errorMessage String?
+  createdAt    DateTime  @default(now())
+
+  @@index([provider])
+  @@index([taskType])
+  @@index([status])
+  @@index([startedAt])
+}
